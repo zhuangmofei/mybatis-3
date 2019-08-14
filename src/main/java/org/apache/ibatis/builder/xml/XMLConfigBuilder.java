@@ -52,9 +52,25 @@ import org.apache.ibatis.type.JdbcType;
  */
 public class XMLConfigBuilder extends BaseBuilder {
 
+  /**
+   * 私有变量用于判断当前的Builder是否都已经生成过SqlSessionFactory了
+   * 但是一个Builder是可以创建多个SqlSessionFactory的，后面会持续关注这个变量
+   * 2019-08-14：看了一会觉得这个变量应该是这个意思，就是如果当前的builder已经解析过一次xml了，那么下一次
+   * 在需要通过builder来创建Factory的时候，就不需要再进行xml文件的解析了，直接获取就可以了
+   */
   private boolean parsed;
+  /**
+   * 用于解析配置文件的对象
+   */
   private final XPathParser parser;
+  /**
+   * 系统的环境变量
+   */
   private String environment;
+
+  /**
+   * 这个变量是用来
+   */
   private final ReflectorFactory localReflectorFactory = new DefaultReflectorFactory();
 
   public XMLConfigBuilder(Reader reader) {
@@ -66,6 +82,13 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   public XMLConfigBuilder(Reader reader, String environment, Properties props) {
+    //默认情况下environment和props是null
+    //这里创建一个XPathParser对象，重点是XMLMapperEntityResolver对象，用于通过本地dtd文件去解析mybatis的配置文件
+    /**
+     * XMLConfigBuilder这个对象是解析配置文件的枢纽对象，配置文件中所有的信息都会保存在这个对象中，用于后续创建SqlSessionFactory做准备
+     * 这里要说明一下在XMLConfigBuilder这个对象中还有一个非常重要的对象叫做XPathParser，这里面才是真正的保存配置文件中信息的地方
+     * XMLMapperEntityResolver是通过读取本地的dtd文件来校验读取到的配置文件是否正确的解析器
+     */
     this(new XPathParser(reader, true, props, new XMLMapperEntityResolver()), environment, props);
   }
 
@@ -82,10 +105,13 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private XMLConfigBuilder(XPathParser parser, String environment, Properties props) {
+    /**
+     * 调用BaseBuilder的构造方法，为属性赋值
+     */
     super(new Configuration());
     ErrorContext.instance().resource("SQL Mapper Configuration");
     this.configuration.setVariables(props);
-    this.parsed = false;
+    this.parsed = false;//设置当前XMLConfigBuilder对象的解析标志属性
     this.environment = environment;
     this.parser = parser;
   }
@@ -95,6 +121,9 @@ public class XMLConfigBuilder extends BaseBuilder {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
     }
     parsed = true;
+    /**
+     * 通过xpath的方式找到对应的配置根节点configuration节点
+     */
     parseConfiguration(parser.evalNode("/configuration"));
     return configuration;
   }

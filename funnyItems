@@ -1,0 +1,5 @@
+1.(2019-08-14)在创建XNode对象的时候在获取parseBody(node);的时候是啥意思没看懂，在提取body的时候还判断了一下Node.CDATA_SECTION_NODE和Node.TEXT_NODE
+  估计是在后面解析xml Sql的时候，有用到吧，不过这个Node的12种类型，找时间要看一下。
+  答：好像明白是啥意思了，就是针对Mapper中那种<good>abc</goog>，用来获取abc的值，这个要找时间验证一下
+  但是在Mybatis的配置文件中应该是不存在可以这么书写的标签，所以这里只是为了在mapper中获取cadta或者是sql的情况
+，

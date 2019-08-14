@@ -43,7 +43,13 @@ public class XNode {
     this.node = node;
     this.name = node.getNodeName();
     this.variables = variables;
+    /**
+     * 提取当前节点attribute属性
+     */
     this.attributes = parseAttributes(node);
+    /**
+     * 提取当前节点的body，啥意思啊，没看懂
+     */
     this.body = parseBody(node);
   }
 
@@ -353,6 +359,9 @@ public class XNode {
     if (attributeNodes != null) {
       for (int i = 0; i < attributeNodes.getLength(); i++) {
         Node attribute = attributeNodes.item(i);
+        /**
+         *
+         */
         String value = PropertyParser.parse(attribute.getNodeValue(), variables);
         attributes.put(attribute.getNodeName(), value);
       }

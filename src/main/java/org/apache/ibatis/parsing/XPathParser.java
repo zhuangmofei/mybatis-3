@@ -48,11 +48,24 @@ public class XPathParser {
   private final Document document;
   private boolean validation;
   private EntityResolver entityResolver;
+  /**
+   * 这个是一个全局的properties,就是最终解析配置文件所获取到的全部属性，都会保存到这个对象中
+   */
   private Properties variables;
   private XPath xpath;
 
+  /**
+   * 提供了多种构造方法，可以通过传入不同的对象来构造XPathParser对象
+   * @param xml
+   */
   public XPathParser(String xml) {
+    /**
+     * 首先调用通用的构造函数
+     */
     commonConstructor(false, null, null);
+    /**
+     * 将传入的xml转换成document对象
+     */
     this.document = createDocument(new InputSource(new StringReader(xml)));
   }
 
@@ -135,12 +148,27 @@ public class XPathParser {
     this.variables = variables;
   }
 
+  /**
+   * 用于获取对应xml节点的属性值，底层方法是evaluate
+   * 这里的expression，对应的是一个xpath的路径，方法的功能就是获取这个路径节点的属性值
+   * @param expression
+   * @return
+   */
   public String evalString(String expression) {
     return evalString(document, expression);
   }
 
+  /**
+   * 这个获取指定xpath的值的方法也可以算作一个基础方法，因为在XPathConstants中只定义了5中类型
+   * (NUMBER,STRING,BOOLEAN,NODESET,NODE)
+   * 但是Mybatis的XPathPaser却支持了很多中，其实都是在String的基础上通过各自valueOf方法进行的类型转换
+   * @param root
+   * @param expression
+   * @return
+   */
   public String evalString(Object root, String expression) {
     String result = (String) evaluate(expression, root, XPathConstants.STRING);
+    //这里如果是xml中的属性用了变量替换符，需要在下面的方法中替换成真实的值
     result = PropertyParser.parse(result, variables);
     return result;
   }
@@ -218,6 +246,13 @@ public class XPathParser {
     return new XNode(this, node, variables);
   }
 
+  /**
+   * 所有获取节点方法的底层通用方法
+   * @param expression 待获取值的xpath路径
+   * @param root 需要查找值的document对象
+   * @param returnType 要返回的对象的类型
+   * @return
+   */
   private Object evaluate(String expression, Object root, QName returnType) {
     try {
       return xpath.evaluate(expression, root, returnType);
@@ -234,9 +269,9 @@ public class XPathParser {
 
       factory.setNamespaceAware(false);
       factory.setIgnoringComments(true);
-      factory.setIgnoringElementContentWhitespace(false);
-      factory.setCoalescing(false);
-      factory.setExpandEntityReferences(true);
+      factory.setIgnoringElementContentWhitespace(false);//解析文档的时候消除空格
+      factory.setCoalescing(false);//指定此代码生成的解析器将CDATA节点转换为文本节点并将其附加到相邻（如果有的话）文本节点。 默认情况下，该值设置为false
+      factory.setExpandEntityReferences(true);//指定此代码生成的解析器将扩展实体引用节点。
 
       DocumentBuilder builder = factory.newDocumentBuilder();
       builder.setEntityResolver(entityResolver);
@@ -261,6 +296,16 @@ public class XPathParser {
     }
   }
 
+  /**
+   * 通用的构造方法
+   * 1.为全局解析xml文件的参数属性赋值
+   * 2.
+   * @param validation 是否对xml依据dtd或者是xsd进行内容的校验
+   * @param variables Properties变量对象，用于替换需要动态配置的属性值
+   * @param entityResolver 实体解析器，因为Mybatis本身使用的是dtd的校验文件，但是如果每次都是通过网络去请求
+   *                       这个dtd文件的话，在极端情况下可能会导致Mybatis启动失败，所以后面针对Mybatis的默认配置
+   *                       文件，是采用了一个自定义的解析器，通过读取本地的dtd文件，对导入的Mybatis文件进行校验
+   */
   private void commonConstructor(boolean validation, Properties variables, EntityResolver entityResolver) {
     this.validation = validation;
     this.entityResolver = entityResolver;

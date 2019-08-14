@@ -63,6 +63,11 @@ public class PropertyParser {
 
     private VariableTokenHandler(Properties variables) {
       this.variables = variables;
+      /**
+       * 这个KEY_ENABLE_DEFAULT_VALUE和KEY_DEFAULT_VALUE_SEPARATOR是可以通过创建Builder的时候改变的
+       * 在传入的properties对象中改变
+       * 比如在Property中传入：KEY_ENABLE_DEFAULT_VALUE true
+       */
       this.enableDefaultValue = Boolean.parseBoolean(getPropertyValue(KEY_ENABLE_DEFAULT_VALUE, ENABLE_DEFAULT_VALUE));
       this.defaultValueSeparator = getPropertyValue(KEY_DEFAULT_VALUE_SEPARATOR, DEFAULT_VALUE_SEPARATOR);
     }

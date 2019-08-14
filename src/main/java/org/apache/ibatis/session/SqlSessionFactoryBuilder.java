@@ -46,6 +46,10 @@ public class SqlSessionFactoryBuilder {
 
   public SqlSessionFactory build(Reader reader, String environment, Properties properties) {
     try {
+      /**
+       * 每次调用SqlSessionFactoryBuilder().build方法其实都是重新创建了一个XMLConfigBuilder，用户承载解析的mybatis-config.xml文件中的属性
+       * 所以XMLConfigBuilder中的parsed属性，就表示当前builder是否已经都创建过SqlSessionFactory了
+       */
       XMLConfigBuilder parser = new XMLConfigBuilder(reader, environment, properties);
       return build(parser.parse());
     } catch (Exception e) {
