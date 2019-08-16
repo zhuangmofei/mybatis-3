@@ -35,6 +35,13 @@ public class DefaultReflectorFactory implements ReflectorFactory {
     this.classCacheEnabled = classCacheEnabled;
   }
 
+  /**
+   * 在调用这个方法的时候，其实就是初始化对应的type
+   * 然后解析type映射到一个对应的Reflector实例
+   * 最终存储到这个reflectorMap中
+   * @param type
+   * @return
+   */
   @Override
   public Reflector findForClass(Class<?> type) {
     if (classCacheEnabled) {

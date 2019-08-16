@@ -22,6 +22,12 @@
 
 <configuration>
     <!-- autoMappingBehavior should be set in each test case -->
+  <properties url="">
+
+  </properties>
+  <settings>
+    <setting name="" value=""/>
+  </settings>
     <environments default="development">
         <environment id="development">
             <transactionManager type="JDBC">

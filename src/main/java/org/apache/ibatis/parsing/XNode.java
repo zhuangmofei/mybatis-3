@@ -49,6 +49,8 @@ public class XNode {
     this.attributes = parseAttributes(node);
     /**
      * 提取当前节点的body，啥意思啊，没看懂
+     * 2019-08-14：终于看懂了，这里是对Mapper来处理的，就是比如一个select标签，那么里面是会有sql语句或者是CDATA的与具体，这个就是用来存储
+     * 那个实际的sql用的，但是对于Mybatis整体的配置文件来说，每一个可以配置的标签都是没有body的
      */
     this.body = parseBody(node);
   }

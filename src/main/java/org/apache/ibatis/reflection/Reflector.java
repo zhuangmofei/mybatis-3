@@ -45,6 +45,12 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
  *
  * @author Clinton Begin
  */
+
+/**
+ * 2019-08-15
+ * 其实理解起来这个类就是针对每个type的解析结果存放的类
+ * 然后存储在DefaultReflectorFactory这个对象里面的map里面
+ */
 public class Reflector {
 
   private final Class<?> type;
@@ -58,9 +64,19 @@ public class Reflector {
 
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
 
+  /**
+   * 构造方法中会将类属性全部都初始化了
+   * @param clazz
+   */
   public Reflector(Class<?> clazz) {
     type = clazz;
+    /**
+     * 找到一个不带参数的构造函数，赋值给defaultConstructor
+     */
     addDefaultConstructor(clazz);
+    /**
+     * 初始化getMethods 和 getTypes属性
+     */
     addGetMethods(clazz);
     addSetMethods(clazz);
     addFields(clazz);
@@ -84,12 +100,17 @@ public class Reflector {
     Map<String, List<Method>> conflictingGetters = new HashMap<>();
     Method[] methods = getClassMethods(clazz);
     Arrays.stream(methods).filter(m -> m.getParameterTypes().length == 0 && PropertyNamer.isGetter(m.getName()))
+      /**
+       * addMethodConflict(待写入的map对象，属性名，method)
+       */
       .forEach(m -> addMethodConflict(conflictingGetters, PropertyNamer.methodToProperty(m.getName()), m));
     resolveGetterConflicts(conflictingGetters);
   }
 
   /**
-   * ？？？？？
+   * 2019-08-15
+   * conflictingGetters ： ----> key 属性的名称
+   *                       ----> val 属性相关的方法列表
    * @param conflictingGetters
    */
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
@@ -110,6 +131,10 @@ public class Reflector {
                     + propName + " in class " + winner.getDeclaringClass()
                     + ". This breaks the JavaBeans specification and can cause unpredictable results.");
           } else if (candidate.getName().startsWith("is")) {
+            /**
+             * 如果get 和 is 同时存在且返回类型相同
+             * 这里认为is的优先级高
+             */
             winner = candidate;
           }
         } else if (candidateType.isAssignableFrom(winnerType)) {
@@ -123,12 +148,25 @@ public class Reflector {
                   + ". This breaks the JavaBeans specification and can cause unpredictable results.");
         }
       }
+      /**
+       * 很重要的一个方法，跟进去
+       */
       addGetMethod(propName, winner);
     }
   }
 
+  /**
+   * 对类属性getMethods和getTypes进行赋值
+   *
+   *
+   * @param name
+   * @param method
+   */
   private void addGetMethod(String name, Method method) {
     if (isValidPropertyName(name)) {
+      /**
+       * MethodInvoker对象是Mybatis在原生Method的基础上封装了一层，里面的type属性目前没明白做什么用的
+       */
       getMethods.put(name, new MethodInvoker(method));
       Type returnType = TypeParameterResolver.resolveReturnType(method, type);
       getTypes.put(name, typeToClass(returnType));
@@ -144,9 +182,11 @@ public class Reflector {
   }
 
   /**
-   * conflictingMethods返回的对象是：
-   * Name:[getName]
-   *
+   * 方法的名字意思是解决冲突方法，开始也没理解充分，但是思考了之前解析Method的过程可以知道
+   * 其实上面解析的过程是把当前类，父类和接口中的方法都解析出来了，所有这个方法有两个作用：
+   * 1.解决掉父类与子类中相同的方法，合并成一个
+   * 2.将同一个属性对应的多个方法存放到一个list中，因为Mybatis里面不仅仅getXCC这种格式的是get方法，
+   *   isXCC这种的也算作get方法，所以Map会用一个List来处理
    * @param conflictingMethods
    * @param name
    * @param method
@@ -268,6 +308,11 @@ public class Reflector {
     }
   }
 
+  /**
+   * 这里只保存合法的属性变量
+   * @param name
+   * @return
+   */
   private boolean isValidPropertyName(String name) {
     return !(name.startsWith("$") || "serialVersionUID".equals(name) || "class".equals(name));
   }

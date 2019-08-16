@@ -44,6 +44,18 @@ public class TypeParameterResolver {
    * @return The return type of the method as {@link Type}. If it has type parameters in the declaration,<br>
    *         they will be resolved to the actual runtime {@link Type}s.
    */
+  /**
+   * 2019-08-15
+   * 这里作者用getGenericReturnType方法是为了能够取到那种带泛型的ReturnType
+   * 比如返回对象是一个List<String>，这时如果只是用getReturnType来获取就只能获取到：java.util.List
+   * 但是用getGenericReturnType就能够获取到实际的数据类型：java.util.List<java.lang.String>
+   *
+   * declaringClass ： 就是这个方法是属于哪个类的
+   * srcType ：是当前被解析的类
+   * @param method
+   * @param srcType
+   * @return
+   */
   public static Type resolveReturnType(Method method, Type srcType) {
     Type returnType = method.getGenericReturnType();
     Class<?> declaringClass = method.getDeclaringClass();
@@ -64,6 +76,20 @@ public class TypeParameterResolver {
     return result;
   }
 
+  /**
+   * 2019-08-15 : 先记住看到这里了吧，最终的结果应该是为了获取到get方法实际返回的类型是什么，但是具体的还是需要仔细看看
+   * java.lang.reflect.Type：java语言中所有类型的公共父接口
+   * Type直接子接口：ParameterizedType，GenericArrayType，TypeVariable和WildcardType四种类型的接口
+   * TypeVariable: 是各种类型变量的公共父接口
+   * ParameterizedType: 表示一种参数化的类型，比如Collection
+   * GenericArrayType: 表示一种元素类型是参数化类型或者类型变量的 数组类型
+   * WildcardType: 代表一种通配符类型表达式，比如?, ? extends Number, ? super Integer【wildcard是一个单词：就是“通配符”】
+   * @param type 获取的方法的返回类型 GenericReturnType
+   * @param srcType 当前类的Class (这里这么做的原因是，因为在获取方法的时候，将其父类和接口中的方法也都获取到了，
+   *                所以对于一个方法，很可能是属于其父类的，而不是当前类的)
+   * @param declaringClass 当前方法所属的类
+   * @return
+   */
   private static Type resolveType(Type type, Type srcType, Class<?> declaringClass) {
     if (type instanceof TypeVariable) {
       return resolveTypeVar((TypeVariable<?>) type, srcType, declaringClass);

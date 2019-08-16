@@ -28,6 +28,13 @@ public class MethodInvoker implements Invoker {
   private final Class<?> type;
   private final Method method;
 
+  /**
+   * 这个构造方法有点意思
+   * 就是如果get方法有参数的话，那么type就存储第一个入参的类
+   * 如果没有入参，就存储返回值的类
+   * 但是在下面的invoke的方法中也没有用到这个type,下面的getType方法也没有调用方，目前没想明白这个type是做啥用的
+   * @param method
+   */
   public MethodInvoker(Method method) {
     this.method = method;
 

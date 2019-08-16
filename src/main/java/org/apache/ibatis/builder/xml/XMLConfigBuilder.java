@@ -55,8 +55,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   /**
    * 私有变量用于判断当前的Builder是否都已经生成过SqlSessionFactory了
    * 但是一个Builder是可以创建多个SqlSessionFactory的，后面会持续关注这个变量
-   * 2019-08-14：看了一会觉得这个变量应该是这个意思，就是如果当前的builder已经解析过一次xml了，那么下一次
-   * 在需要通过builder来创建Factory的时候，就不需要再进行xml文件的解析了，直接获取就可以了
+   * 2019-08-14:后面有注释说明，每一个XMLConfigBuilder只能被使用一次  can only be used once
    */
   private boolean parsed;
   /**
@@ -69,7 +68,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   private String environment;
 
   /**
-   * 这个变量是用来
+   * 这个变量是用来存储解析的类
    */
   private final ReflectorFactory localReflectorFactory = new DefaultReflectorFactory();
 
@@ -119,6 +118,10 @@ public class XMLConfigBuilder extends BaseBuilder {
   public Configuration parse() {
     if (parsed) {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
+      /**
+       * 每一个XMLConfigBuilder只能被初始化一次
+       * 我觉得这么做的目的就是怕，如果再初始化第二次的时候，初始化不完全的时候，会导致获取的对象不完整
+       */
     }
     parsed = true;
     /**
@@ -151,6 +154,13 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 解析<settings>标签
+   * 因为<settings>下面是可以设置<setting>来设置属性
+   * 所有的内置属性都是Configuration.class里的属性，这里是要有校验的
+   * @param context
+   * @return
+   */
   private Properties settingsAsProperties(XNode context) {
     if (context == null) {
       return new Properties();
@@ -247,11 +257,27 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 解析<properties>标签的属性（attributte）
+   * <!ELEMENT properties (property*)>
+   * <!ATTLIST properties
+   * resource CDATA #IMPLIED
+   * url CDATA #IMPLIED
+   * >
+   * 通过dtd文件知道我们可以通过resource和url来指定资源文件位置
+   * 来初始化Properties对象
+   * 这个在后面会涉及到初始化过程
+   * @param context
+   * @throws Exception
+   */
   private void propertiesElement(XNode context) throws Exception {
     if (context != null) {
       Properties defaults = context.getChildrenAsProperties();
       String resource = context.getStringAttribute("resource");
       String url = context.getStringAttribute("url");
+      /**
+       * 两个attributte只能存在一个
+       */
       if (resource != null && url != null) {
         throw new BuilderException("The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
       }
