@@ -1,0 +1,44 @@
+Java中关于泛型的理解(https://www.cnblogs.com/chenxibobo/p/9655236.html)：
+<? extends T> 表示类型的上界，表示参数化类型的可能是T 或是 T的子类;
+<? super T> 表示类型下界（Java Core中叫超类型限定），表示参数化类型是此类型的超类型（父类型），直至Object;
+
+上边界模式，只能从其中取元素，但是不能向其中添加任何元素，会报错
+比如List<? extends Father> : 这个只是表示任何Father对象或者Father对象的派生类对象的一个列表，但是无法确定具体是
+哪种类型，在编译器中是通过capture#1占位符来编译的，所以这个时候如果我们向其中添加任何对象，都是不会被编译通过的
+但是我们可以添加null
+
+下边界模式，只能添加Father和Father的子类，不能添加Father的父类，读取出来的东西只能放到Object中
+List<? super Father> list = new ArrayList<>();
+list.add(new Father());
+list.add(new Human());//compile error
+list.add(new Son());
+Father person1 = list.get(0);//compile error
+Son son = list.get(0);//compile error
+Object object1 = list.get(0);
+因为下边界规定了元素的最小粒度的下限，实际上是放松了容器元素的类型控制。既然元素是Father的基类，那王丽存粒度比
+基类小的都可以，但是出于安全考虑，我们可以加入Father对象或者是任何子类，但是编译器不知道List的内容酒精是Father的
+那个超类，因此不允许加入特定的任何超类。而当我们读取的时候，编译器不知道是什么类型的情况下只能返回Object
+
+
+PECS原则(Producer Extends Consumer Super):
+1.频繁往外读取内容的，适合使用上边界Extends
+2.经常往里插入的，适合使用下边界Super
+
+总结：
+extends 可用于返回类型限定，不能用于参数类型限定（换句话说：? extends xxx 只能用于方法返回类型限定，jdk能够确定此类的最小继承边界为xxx，只要是这个类的父类都能接收，但是传入参数无法确定具体类型，只能接受null的传入）。
+super 可用于参数类型限定，不能用于返回类型限定（换句话说：? supper xxx 只能用于方法传参，因为jdk能够确定传入为xxx的子类，返回只能用Object类接收）。
+? 既不能用于方法参数传入，也不能用于方法返回。
+
+
+
+
+
+
+
+
+
+
+
+
+
+

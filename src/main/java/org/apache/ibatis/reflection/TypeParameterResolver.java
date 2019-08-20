@@ -166,6 +166,9 @@ public class TypeParameterResolver {
       clazz = (Class<?>) srcType;
     } else if (srcType instanceof ParameterizedType) {
       ParameterizedType parameterizedType = (ParameterizedType) srcType;
+      /**
+       * 如果是包装类型，比如是集合这种，会把泛型去掉，取出真实的类型
+       */
       clazz = (Class<?>) parameterizedType.getRawType();
     } else {
       throw new IllegalArgumentException("The 2nd arg must be Class or ParameterizedType, but was: " + srcType.getClass());
