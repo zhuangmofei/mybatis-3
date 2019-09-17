@@ -82,7 +82,7 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   public XMLConfigBuilder(Reader reader, String environment, Properties props) {
     //默认情况下environment和props是null
-    //这里创建一个XPathParser对象，重点是XMLMapperEntityResolver对象，用于通过本地dtd文件去解析mybatis的配置文件
+    //这里创建一个XPathParser对象，XMLMapperEntityResolver对象，用于通过本地dtd文件去解析mybatis的配置文件
     /**
      * XMLConfigBuilder这个对象是解析配置文件的枢纽对象，配置文件中所有的信息都会保存在这个对象中，用于后续创建SqlSessionFactory做准备
      * 这里要说明一下在XMLConfigBuilder这个对象中还有一个非常重要的对象叫做XPathParser，这里面才是真正的保存配置文件中信息的地方

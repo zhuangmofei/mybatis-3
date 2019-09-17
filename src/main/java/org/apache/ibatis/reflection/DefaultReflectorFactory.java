@@ -15,8 +15,10 @@
  */
 package org.apache.ibatis.reflection;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 
 public class DefaultReflectorFactory implements ReflectorFactory {
   private boolean classCacheEnabled = true;
@@ -46,7 +48,14 @@ public class DefaultReflectorFactory implements ReflectorFactory {
   public Reflector findForClass(Class<?> type) {
     if (classCacheEnabled) {
       // synchronized (type) removed see issue #461
+      /**
+       * 下面的用法是Java8中的新特性，就是ConcurrentMap的方法，不是Map中的方法
+       * 方法中定义的是Function<? super K, ? extends V> mappingFunction
+       * 按照Java8中的新定义，K为参数，V为返回值，而要想使用lmbada表达式，那么lambda的
+       * 构造器方法与函数式接口中的抽象方法的参数和返回值必须保持一致
+       */
       return reflectorMap.computeIfAbsent(type, Reflector::new);
+
     } else {
       return new Reflector(type);
     }
