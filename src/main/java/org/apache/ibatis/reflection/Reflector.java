@@ -71,7 +71,7 @@ public class Reflector {
   public Reflector(Class<?> clazz) {
     type = clazz;
     /**
-     * 找到一个不带参数的构造函数，赋值给defaultConstructor
+     * 找到对象clazz中一个不带参数的构造函数，赋值给defaultConstructor，是clazz的无参构造函数
      */
     addDefaultConstructor(clazz);
     /**
@@ -110,7 +110,7 @@ public class Reflector {
   /**
    * 2019-08-15
    * conflictingGetters ： ----> key 属性的名称
-   *                       ----> val 属性相关的方法列表
+   *                       ----> val 属性相关的方法列表(包括get,is)
    * @param conflictingGetters
    */
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
@@ -138,8 +138,52 @@ public class Reflector {
             winner = candidate;
           }
         } else if (candidateType.isAssignableFrom(winnerType)) {
+          /**
+           * 判断candidateType所表示的类或者是接口与winnerType的是否相同，或者是winnerType的父类
+           * 这里记录一个知识点：就是isAssignableFrom与instanceofd的区别：
+           * 1.isAssignableFrom()方法是从类继承的角度去判断，instanceof()方法是从实例继承的角度去判断。
+           * 2.isAssignableFrom()方法是判断是否为某个类的父类，instanceof()方法是判断是否某个类的子类。
+           */
           // OK getter type is descendant
         } else if (winnerType.isAssignableFrom(candidateType)) {
+          /**
+           * 这里记录一下自己对于isAssignableFrom的理解吧：
+           * 就拿这个分支来说吧：winnerType.isAssignableFrom(candidateType)
+           * 首先assignable英文的翻译为：可分配的，可赋值的
+           * 所以这个分支的判断条件就是： winnerType = candidateType  能否成立
+           * 如果能成立，就表示winnerType是父类
+           *
+           * 而这里为什么winnerType都已经是父类了，还要讲winner的位置让出去呢？
+           * 应该是为了让定义更加清楚一些，很多时候可能是在接口中只定义了一个父类，
+           * 但是在子类的实现中，返回了更加明确的类型,下面是我自己写的一个这个场景的例子：
+           *   static class A{
+           *
+           *   }
+           *
+           *   static class B extends A {
+           *
+           *   }
+           *
+           *   static class C {
+           *     A getHello() {
+           *       return new A();
+           *     }
+           *   }
+           *
+           *   static class D extends C {
+           *     B getHello() {
+           *       return new B();
+           *     }
+           *   }
+           *
+           *   public static void main(String[] args) {
+           *     C target = new D();
+           *     System.out.println(target.getHello());
+           *   }
+           *
+           *   因为这里A 可能只是一个泛泛的类型，比如汽车，但是在子类的实现类中明确的返回了奥迪
+           *   所以奥迪是更加准确的。
+           */
           winner = candidate;
         } else {
           throw new ReflectionException(
@@ -149,7 +193,10 @@ public class Reflector {
         }
       }
       /**
-       * 很重要的一个方法，跟进去
+       * 很重要的一个方法：
+       * 上面的循环已经将List中的全部方法都遍历了一遍，按照优先级选出了最终的get方法，所以下面就是对这个方法进行归纳整理的地方了
+       * 这里的propName表示的是属性的名字
+       * winner是择优选择的get方法
        */
       addGetMethod(propName, winner);
     }
@@ -182,7 +229,7 @@ public class Reflector {
   }
 
   /**
-   * 方法的名字意思是解决冲突方法，开始也没理解充分，但是思考了之前解析Method的过程可以知道
+   * 方法的名字意思是添加冲突方法，开始也没理解充分，但是思考了之前解析Method的过程可以知道
    * 其实上面解析的过程是把当前类，父类和接口中的方法都解析出来了，所有这个方法有两个作用：
    * 1.解决掉父类与子类中相同的方法，合并成一个
    * 2.将同一个属性对应的多个方法存放到一个list中，因为Mybatis里面不仅仅getXCC这种格式的是get方法，
@@ -192,6 +239,9 @@ public class Reflector {
    * @param method
    */
   private void addMethodConflict(Map<String, List<Method>> conflictingMethods, String name, Method method) {
+    /**
+     * Java8的新特性，就是通过key来获取value,但是如果value为空，就用后面的lambda表达式返回值作为当前key的返回值
+     */
     List<Method> list = conflictingMethods.computeIfAbsent(name, k -> new ArrayList<>());
     list.add(method);
   }

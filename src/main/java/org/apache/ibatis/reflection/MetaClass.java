@@ -37,8 +37,7 @@ public class MetaClass {
   private MetaClass(Class<?> type, ReflectorFactory reflectorFactory) {
     this.reflectorFactory = reflectorFactory;
     /**
-     * 在这里出发了reflectorFactory初始化对应的type
-     * 到其中的map里面
+     * 在这里触发了reflectorFactory初始化对应的type到其中的map里面
      * 所以在创建完MetaClass对象的时候，在reflectorFactory里面就已经初始化完成
      * Configuration对象的Reflector了
      */
