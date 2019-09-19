@@ -246,6 +246,15 @@ public class Reflector {
     list.add(method);
   }
 
+  /**
+   * 处理set方法的逻辑，整体来说对象都差不多，唯一不同的是：
+   * 这里在选定set方法的时候，是会根据get方法的getType来决定set方法的优先级
+   *
+   * 比如说如果一个有两个set方法来自父类和子类，那么这个时候，就要根据之前获取的get方法
+   * 选择的Type来确定选择的是哪一个。
+   * 目的就是要与get方法的对应上
+   * @param conflictingSetters
+   */
   private void resolveSetterConflicts(Map<String, List<Method>> conflictingSetters) {
     for (String propName : conflictingSetters.keySet()) {
       List<Method> setters = conflictingSetters.get(propName);
@@ -260,6 +269,9 @@ public class Reflector {
         }
         if (exception == null) {
           try {
+            /**
+             * 选择一个子类
+             */
             match = pickBetterSetter(match, setter, propName);
           } catch (ReflectionException e) {
             // there could still be the 'best match'
@@ -271,6 +283,9 @@ public class Reflector {
       if (match == null) {
         throw exception;
       } else {
+        /**
+         * 与获取get的方法一样
+         */
         addSetMethod(propName, match);
       }
     }
@@ -282,6 +297,10 @@ public class Reflector {
     }
     Class<?> paramType1 = setter1.getParameterTypes()[0];
     Class<?> paramType2 = setter2.getParameterTypes()[0];
+    /**
+     * 这里是判断并且比较那个更适合；原则就是子类的优先级大于父类
+     * 因为在get方法中就是通过这个来选取的
+     */
     if (paramType1.isAssignableFrom(paramType2)) {
       return setter2;
     } else if (paramType2.isAssignableFrom(paramType1)) {
