@@ -79,6 +79,10 @@ public class Reflector {
      */
     addGetMethods(clazz);
     addSetMethods(clazz);
+    /**
+     * 处理剩余属性，目标是那种没有set和get方法的属性
+     * 这里有一点需要注意一下，因为Mybatis中自己封装了Invoker的对象，所以这里存储的都是Invoker
+     */
     addFields(clazz);
     readablePropertyNames = getMethods.keySet().toArray(new String[0]);
     writablePropertyNames = setMethods.keySet().toArray(new String[0]);
@@ -340,6 +344,11 @@ public class Reflector {
     return result;
   }
 
+  /**
+   * 这个方法要处理的问题是，比如一个属性没有对应的set或者是get方法，那么这种属性也需要记录下来
+   * 但是保存的对应方法是GetFieldInvoker和SetFieldInvoker,这个是项目中自己封装的的一个Invoker
+   * @param clazz
+   */
   private void addFields(Class<?> clazz) {
     Field[] fields = clazz.getDeclaredFields();
     for (Field field : fields) {
@@ -347,6 +356,11 @@ public class Reflector {
         // issue #379 - removed the check for final because JDK 1.5 allows
         // modification of final fields through reflection (JSR-133). (JGB)
         // pr #16 - final static can only be set by the classloader
+        /**
+         * Java 反射的modifiers就是一个属性前面的修饰符
+         * 缺省是0 ， public  是1 ，private 是 2 ，protected 是 4，static 是 8 ，final 是 16
+         * 如果是   public  static final  三个修饰的 就是3 个的加和 为 25 。
+         */
         int modifiers = field.getModifiers();
         if (!(Modifier.isFinal(modifiers) && Modifier.isStatic(modifiers))) {
           addSetField(field);
@@ -356,6 +370,9 @@ public class Reflector {
         addGetField(field);
       }
     }
+    /**
+     * 递归的处理分类中的属性
+     */
     if (clazz.getSuperclass() != null) {
       addFields(clazz.getSuperclass());
     }

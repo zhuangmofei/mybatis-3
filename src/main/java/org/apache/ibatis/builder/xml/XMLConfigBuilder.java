@@ -136,9 +136,34 @@ public class XMLConfigBuilder extends BaseBuilder {
       //issue #117 read properties first
       propertiesElement(root.evalNode("properties"));
       Properties settings = settingsAsProperties(root.evalNode("settings"));
+      /**
+       * 加载vfs
+       */
       loadCustomVfs(settings);
+      /**
+       * 加载日志实现类
+       */
       loadCustomLogImpl(settings);
+      /**
+       * 加载类的别名：
+       * <typeAlias alias="Author" type="domain.blog.Author"/>
+       */
       typeAliasesElement(root.evalNode("typeAliases"));
+      /**
+       * Mybatis允许你在已映射语句执行过程中的某一点进行拦截调用，默认情况下，Mybatis允许使用插件拦截的方法调用包括：
+       * Executor (update, query, flushStatements, commit, rollback, getTransaction, close, isClosed)
+       * ParameterHandler (getParameterObject, setParameters)
+       * ResultSetHandler (handleResultSets, handleOutputParameters)
+       * StatementHandler (prepare, parameterize, batch, update, query)
+       * 只需要实现Interceptor接口，并指定要拦截的方法签名即可
+       * 但是一定更要注意不要影响到Mybatis核心的处理逻辑
+       *
+       * <plugins>
+       *   <plugin interceptor="org.mybatis.example.ExamplePlugin">
+       *     <property name="someProperty" value="100"/>
+       *   </plugin>
+       * </plugins>
+       */
       pluginElement(root.evalNode("plugins"));
       objectFactoryElement(root.evalNode("objectFactory"));
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
@@ -199,6 +224,12 @@ public class XMLConfigBuilder extends BaseBuilder {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
         if ("package".equals(child.getName())) {
+          /**
+           * <typeAliases>
+           *   <package name="domain.blog"/>
+           * </typeAliases>
+           * 通过设置一个包路径，Mybatis会自动扫描路径下的Java Bean,在没有注解的情况下，会使用Bean的首写字母小写的非限定名来作为他的别名
+           */
           String typeAliasPackage = child.getStringAttribute("name");
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
         } else {
