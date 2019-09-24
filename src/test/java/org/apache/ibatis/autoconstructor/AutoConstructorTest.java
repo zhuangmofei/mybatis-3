@@ -18,6 +18,7 @@ package org.apache.ibatis.autoconstructor;
 import org.apache.ibatis.BaseDataTest;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
@@ -91,4 +92,5 @@ class AutoConstructorTest {
     assertNotNull(subjects);
     Assertions.assertThat(subjects.size()).isEqualTo(3);
   }
+
 }
